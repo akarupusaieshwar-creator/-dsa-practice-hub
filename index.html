@@ -16,7 +16,545 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#121214; --card:#1c1c1f; --text:#eee; --muted:#999; --border:#2e2e33;
+  }<!DOCTYPE html>
+<!--
+  DSA Practice Hub
+  -----------------
+  Built this to test my DSA skills from scratch to where I am now.
+  After solving 90+ problems across topics, I wanted a way to actually
+  test recall instead of just grinding more problems in order — so this
+  picks a random set of problems per topic every time you shuffle,
+  pulling from LeetCode, Codeforces, CodeChef, and HackerRank.
+
+  Created by Sai (github.com/akarupusaieshwar-creator)
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DSA Practice Randomizer</title>
+<style>
+:root{
+  --bg:#f7f7f8; --card:#ffffff; --text:#1a1a1a; --muted:#666;
+  --accent:#2563eb; --border:#e2e2e5;
+  --easy:#16a34a; --medium:#d97706; --hard:#dc2626;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121214; --card:#1c1c1f; --text:#eee; --muted:#999; --border:#2e2e33;
   }
+}
+:root[data-theme="dark"]{
+  --bg:#121214; --card:#1c1c1f; --text:#eee; --muted:#999; --border:#2e2e33;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:20px 14px 60px}
+header{max-width:900px;margin:0 auto 18px}
+h1{font-size:1.4rem;margin:0 0 4px}
+p.sub{color:var(--muted);margin:0 0 14px;font-size:.92rem}
+.controls{display:flex;gap:8px;flex-wrap:wrap;max-width:900px;margin:0 auto 20px}
+button{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:.9rem;cursor:pointer}
+button.secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
+select{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem}
+main{max-width:900px;margin:0 auto;display:grid;gap:14px}
+.topic{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.topic h2{font-size:1rem;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.count{font-size:.75rem;color:var(--muted);font-weight:normal}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+li{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;overflow-x:auto}
+li:hover{background:var(--bg)}
+a{color:var(--text);text-decoration:none;font-size:.92rem;flex:1}
+a:hover{color:var(--accent)}
+.diff{font-size:.72rem;font-weight:600;padding:2px 7px;border-radius:6px;white-space:nowrap}
+.diff.Easy{color:var(--easy);background:color-mix(in srgb, var(--easy) 15%, transparent)}
+.diff.Medium{color:var(--medium);background:color-mix(in srgb, var(--medium) 15%, transparent)}
+.diff.Hard{color:var(--hard);background:color-mix(in srgb, var(--hard) 15%, transparent)}
+.plat{font-size:.68rem;color:var(--muted);border:1px solid var(--border);padding:2px 6px;border-radius:6px;white-space:nowrap}
+#introOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+#introBox{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px 22px;max-width:460px;width:100%}
+#introBox h2{margin:0 0 10px;font-size:1.15rem}
+#introBox p{margin:0 0 14px;font-size:.9rem;color:var(--muted);line-height:1.5}
+#introBox button{width:100%}
+#appRoot{display:none}
+input[type=checkbox]{width:20px;height:20px;flex-shrink:0;accent-color:var(--accent);cursor:pointer;transition:transform .15s}
+input[type=checkbox].pop{animation:popTick .4s ease}
+@keyframes popTick{0%{transform:scale(1)}45%{transform:scale(1.5) rotate(-8deg)}100%{transform:scale(1)}}
+input[type=text]{padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem;flex:1;min-width:180px}
+.themeBtn{background:transparent;border:1px solid var(--border);color:var(--text);width:38px;height:38px;padding:0;border-radius:8px;font-size:1.05rem}
+#celebrateOverlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1100;pointer-events:none;overflow:hidden}
+.confetti{position:absolute;top:-30px;font-size:1.6rem;animation:fall 1.7s ease-in forwards}
+@keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(420deg);opacity:0}}
+#celebrateMsg{background:var(--card);border:1px solid var(--border);padding:16px 26px;border-radius:12px;font-weight:700;font-size:1.05rem;box-shadow:0 8px 30px rgba(0,0,0,.35);animation:popTick .5s ease}
+.noMatch{color:var(--muted);text-align:center;padding:20px;font-size:.9rem}
+.concept{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:14px 16px}
+.concept h3{margin:0 0 8px;font-size:1.02rem}
+.concept p{margin:0 0 10px;font-size:.87rem;color:var(--muted);line-height:1.55}
+.langTabs{display:flex;gap:6px;margin-bottom:8px}
+.langTabs button{padding:5px 12px;font-size:.75rem;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:6px}
+.langTabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+pre{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:.78rem;line-height:1.45;margin:0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+footer{max-width:900px;margin:20px auto 0;color:var(--muted);font-size:.78rem;text-align:center}
+</style>
+</head>
+<body>
+<div id="celebrateOverlay"><div id="celebrateMsg"></div></div>
+<div id="introOverlay">
+  <div id="introBox">
+    <h2>Why I built this</h2>
+    <p>Built this to test my DSA skills from scratch to where I am now. After solving 90+ problems across topics, I wanted a way to actually test recall instead of just grinding more problems in order — so this picks a random set of problems per topic every time you shuffle, pulling from LeetCode, Codeforces, CodeChef, and HackerRank.</p>
+    <p style="margin-bottom:18px">— Sai</p>
+    <button id="enterBtn">Enter Practice Hub</button>
+  </div>
+</div>
+<div id="appRoot">
+<header>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;max-width:900px;margin:0 auto">
+    <div>
+      <h1>DSA Practice Randomizer</h1>
+      <p class="sub">A fresh set of problems per topic every time you hit shuffle. Search or filter to focus, or just shuffle and go.</p>
+    </div>
+    <button class="themeBtn" id="themeToggle" title="Toggle dark/light">🌙</button>
+  </div>
+</header>
+<div class="topic" style="max-width:900px;margin:0 auto 20px">
+  <h2>Connect your progress</h2>
+  <p class="sub" style="margin:0 0 8px">Paste problem titles or slugs you've already solved (comma or newline separated) — the shuffle will skip these. A live LeetCode/CodeChef login can't run from a browser page, so this is manual for now.</p>
+  <textarea id="importBox" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:.85rem" placeholder="e.g. two-sum, valid-parentheses, House Robber"></textarea>
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+    <button id="importBtn">Save solved list</button>
+    <button class="secondary" id="clearImportBtn">Clear solved list</button>
+    <span id="importCount" class="count" style="align-self:center"></span>
+  </div>
+</div>
+<div class="controls">
+  <input type="text" id="searchBox" placeholder="🔍 Search a problem or topic (e.g. 'tree', 'two sum')">
+  <select id="difficultyFilter">
+    <option value="All" selected>All difficulties</option>
+    <option value="Easy">Easy</option>
+    <option value="Medium">Medium</option>
+    <option value="Hard">Hard</option>
+  </select>
+</div>
+<div class="controls">
+  <button id="shuffleBtn">🔀 Shuffle set</button>
+  <button class="secondary" id="clearBtn">Clear checkmarks</button>
+  <select id="perTopic">
+    <option value="3">3 per topic</option>
+    <option value="4" selected>4 per topic</option>
+    <option value="6">6 per topic</option>
+  </select>
+  <select id="platformFilter">
+    <option value="All" selected>All platforms</option>
+    <option value="LeetCode">LeetCode only</option>
+    <option value="Codeforces">Codeforces only</option>
+    <option value="CodeChef">CodeChef only</option>
+    <option value="HackerRank">HackerRank only</option>
+  </select>
+</div>
+<main id="main"></main>
+<footer>Links go to LeetCode. Problem set is curated, not live-pulled — refresh/shuffle re-randomizes which of the curated problems you see.</footer>
+</div>
+
+<script>
+document.getElementById('enterBtn').addEventListener('click', () => {
+  document.getElementById('introOverlay').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'block';
+});
+
+let theme = 'auto';
+try { theme = localStorage.getItem('dsa_theme') || 'auto'; } catch(e) {}
+function applyTheme(){
+  if (theme === 'dark') { document.documentElement.setAttribute('data-theme','dark'); document.getElementById('themeToggle').textContent = '☀️'; }
+  else if (theme === 'light') { document.documentElement.setAttribute('data-theme','light'); document.getElementById('themeToggle').textContent = '🌙'; }
+  else { document.documentElement.removeAttribute('data-theme'); document.getElementById('themeToggle').textContent = '🌓'; }
+}
+document.getElementById('themeToggle').addEventListener('click', () => {
+  theme = theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark';
+  try { localStorage.setItem('dsa_theme', theme); } catch(e) {}
+  applyTheme();
+});
+applyTheme();
+
+const DB = {
+"Arrays & Strings": [
+  ["Two Sum","Easy","two-sum"],["Product of Array Except Self","Medium","product-of-array-except-self"],
+  ["Group Anagrams","Medium","group-anagrams"],["Longest Substring Without Repeating Characters","Medium","longest-substring-without-repeating-characters"],
+  ["Merge Intervals","Medium","merge-intervals"],["Trapping Rain Water","Hard","trapping-rain-water"],
+  ["Best Time to Buy and Sell Stock","Easy","best-time-to-buy-and-sell-stock"],
+  ["Simple Array Sum","Easy","simple-array-sum","HackerRank"],["Diagonal Difference","Easy","diagonal-difference","HackerRank"],
+  ["Mini-Max Sum","Easy","mini-max-sum","HackerRank"],["Way Too Long Words","Easy","71/A","Codeforces"],
+  ["Team","Easy","231/A","Codeforces"],["ATM","Easy","ATM","CodeChef"]
+],
+"Two Pointers": [
+  ["Container With Most Water","Medium","container-with-most-water"],["3Sum","Medium","3sum"],
+  ["Valid Palindrome","Easy","valid-palindrome"],["Sort Colors","Medium","sort-colors"],
+  ["Remove Duplicates from Sorted Array","Easy","remove-duplicates-from-sorted-array"],
+  ["Trapping Rain Water II","Hard","trapping-rain-water-ii"]
+],
+"Sliding Window": [
+  ["Minimum Window Substring","Hard","minimum-window-substring"],["Longest Repeating Character Replacement","Medium","longest-repeating-character-replacement"],
+  ["Sliding Window Maximum","Hard","sliding-window-maximum"],["Permutation in String","Medium","permutation-in-string"],
+  ["Longest Substring with At Most K Distinct Characters","Medium","longest-substring-with-at-most-k-distinct-characters"]
+],
+"Binary Search": [
+  ["Binary Search","Easy","binary-search"],["Search in Rotated Sorted Array","Medium","search-in-rotated-sorted-array"],
+  ["Find Minimum in Rotated Sorted Array","Medium","find-minimum-in-rotated-sorted-array"],
+  ["Median of Two Sorted Arrays","Hard","median-of-two-sorted-arrays"],
+  ["Koko Eating Bananas","Medium","koko-eating-bananas"],["Capacity To Ship Packages Within D Days","Medium","capacity-to-ship-packages-within-d-days"]
+],
+"Recursion & Backtracking": [
+  ["Subsets","Medium","subsets"],["Permutations","Medium","permutations"],
+  ["Combination Sum","Medium","combination-sum"],["N-Queens","Hard","n-queens"],
+  ["Word Search","Medium","word-search"],["Generate Parentheses","Medium","generate-parentheses"],
+  ["Palindrome Partitioning","Medium","palindrome-partitioning"],
+  ["Factorial","Easy","FCTRL","CodeChef"]
+],
+"Trees & BST": [
+  ["Maximum Depth of Binary Tree","Easy","maximum-depth-of-binary-tree"],["Validate Binary Search Tree","Medium","validate-binary-search-tree"],
+  ["Binary Tree Level Order Traversal","Medium","binary-tree-level-order-traversal"],["Lowest Common Ancestor of a BST","Medium","lowest-common-ancestor-of-a-binary-search-tree"],
+  ["Binary Tree Maximum Path Sum","Hard","binary-tree-maximum-path-sum"],["Serialize and Deserialize Binary Tree","Hard","serialize-and-deserialize-binary-tree"],
+  ["Kth Smallest Element in a BST","Medium","kth-smallest-element-in-a-bst"]
+],
+"Graphs (BFS/DFS)": [
+  ["Number of Islands","Medium","number-of-islands"],["Clone Graph","Medium","clone-graph"],
+  ["Course Schedule","Medium","course-schedule"],["Pacific Atlantic Water Flow","Medium","pacific-atlantic-water-flow"],
+  ["Word Ladder","Hard","word-ladder"],["Rotting Oranges","Medium","rotting-oranges"]
+],
+"Stacks & Queues": [
+  ["Valid Parentheses","Easy","valid-parentheses"],["Min Stack","Medium","min-stack"],
+  ["Daily Temperatures","Medium","daily-temperatures"],["Largest Rectangle in Histogram","Hard","largest-rectangle-in-histogram"],
+  ["Evaluate Reverse Polish Notation","Medium","evaluate-reverse-polish-notation"]
+],
+"Linked List": [
+  ["Reverse Linked List","Easy","reverse-linked-list"],["Merge Two Sorted Lists","Easy","merge-two-sorted-lists"],
+  ["Linked List Cycle","Easy","linked-list-cycle"],["Reorder List","Medium","reorder-list"],
+  ["Merge k Sorted Lists","Hard","merge-k-sorted-lists"],["Copy List with Random Pointer","Medium","copy-list-with-random-pointer"]
+],
+"Heaps": [
+  ["Kth Largest Element in an Array","Medium","kth-largest-element-in-an-array"],["Top K Frequent Elements","Medium","top-k-frequent-elements"],
+  ["Find Median from Data Stream","Hard","find-median-from-data-stream"],["Task Scheduler","Medium","task-scheduler"],
+  ["K Closest Points to Origin","Medium","k-closest-points-to-origin"]
+],
+"Dynamic Programming": [
+  ["Climbing Stairs","Easy","climbing-stairs"],["House Robber","Medium","house-robber"],
+  ["Longest Increasing Subsequence","Medium","longest-increasing-subsequence"],["Coin Change","Medium","coin-change"],
+  ["Longest Common Subsequence","Medium","longest-common-subsequence"],["Word Break","Medium","word-break"],
+  ["Edit Distance","Hard","edit-distance"],["Partition Equal Subset Sum","Medium","partition-equal-subset-sum"]
+],
+"Bit Manipulation": [
+  ["Single Number","Easy","single-number"],["Number of 1 Bits","Easy","number-of-1-bits"],
+  ["Counting Bits","Easy","counting-bits"],["Missing Number","Easy","missing-number"],
+  ["Sum of Two Integers","Medium","sum-of-two-integers"]
+],
+"Greedy": [
+  ["Jump Game","Medium","jump-game"],["Gas Station","Medium","gas-station"],
+  ["Maximum Subarray","Medium","maximum-subarray"],["Partition Labels","Medium","partition-labels"],
+  ["Non-overlapping Intervals","Medium","non-overlapping-intervals"],
+  ["Domino Piling","Easy","50/A","Codeforces"]
+]
+};
+
+const PLATFORM_URL = {
+  "LeetCode": slug => `https://leetcode.com/problems/${slug}/`,
+  "Codeforces": slug => `https://codeforces.com/problemset/problem/${slug}`,
+  "CodeChef": slug => `https://www.codechef.com/problems/${slug}`,
+  "HackerRank": slug => `https://www.hackerrank.com/challenges/${slug}/problem`
+};
+
+const CONCEPTS = [
+  {
+    name: "Fast Doubling (Fibonacci)",
+    tags: ["fibonacci","fast doubling","matrix exponentiation"],
+    explanation: "Computes the nth Fibonacci number in O(log n) instead of O(n) using the identities F(2k) = F(k)\u00b7[2\u00b7F(k+1) \u2212 F(k)] and F(2k+1) = F(k)\u00b2 + F(k+1)\u00b2 (derived from matrix exponentiation of [[1,1],[1,0]]). Recurse on n/2, halving the index each call instead of stepping by 1.",
+    code: {
+      java: "static long[] fib(int n) {\n    if (n == 0) return new long[]{0, 1};\n    long[] p = fib(n / 2);\n    long a = p[0], b = p[1];\n    long c = a * (2 * b - a);\n    long d = a * a + b * b;\n    return (n % 2 == 0) ? new long[]{c, d} : new long[]{d, c + d};\n}\n// fib(n)[0] gives F(n)",
+      python: "def fib(n):\n    if n == 0:\n        return (0, 1)\n    a, b = fib(n // 2)\n    c = a * (2 * b - a)\n    d = a * a + b * b\n    return (d, c + d) if n % 2 else (c, d)\n# fib(n)[0] gives F(n)",
+      cpp: "pair<long long,long long> fib(int n) {\n    if (n == 0) return {0, 1};\n    auto [a, b] = fib(n / 2);\n    long long c = a * (2 * b - a);\n    long long d = a * a + b * b;\n    return (n % 2) ? make_pair(d, c + d) : make_pair(c, d);\n}\n// fib(n).first gives F(n)"
+    }
+  },
+  {
+    name: "Binary Exponentiation (Fast Power)",
+    tags: ["binary exponentiation","fast power","modpow","power mod"],
+    explanation: "Computes base^exp mod m in O(log exp) instead of O(exp) by repeatedly squaring the base and halving the exponent, multiplying the result in only when the current bit of exp is 1. Core building block for modular arithmetic problems.",
+    code: {
+      java: "static long power(long base, long exp, long mod) {\n    long result = 1;\n    base %= mod;\n    while (exp > 0) {\n        if ((exp & 1) == 1) result = result * base % mod;\n        base = base * base % mod;\n        exp >>= 1;\n    }\n    return result;\n}",
+      python: "def power(base, exp, mod):\n    result = 1\n    base %= mod\n    while exp > 0:\n        if exp & 1:\n            result = result * base % mod\n        base = base * base % mod\n        exp >>= 1\n    return result",
+      cpp: "long long power(long long base, long long exp, long long mod) {\n    long long result = 1;\n    base %= mod;\n    while (exp > 0) {\n        if (exp & 1) result = result * base % mod;\n        base = base * base % mod;\n        exp >>= 1;\n    }\n    return result;\n}"
+    }
+  },
+  {
+    name: "Kadane's Algorithm (Max Subarray)",
+    tags: ["kadane","max subarray","maximum subarray","dynamic programming"],
+    explanation: "Finds the maximum sum contiguous subarray in O(n). At each index, decide whether to extend the running subarray or start fresh from the current element \u2014 whichever gives a larger sum \u2014 and track the best seen so far.",
+    code: {
+      java: "static int maxSubArray(int[] nums) {\n    int maxSum = nums[0], curSum = nums[0];\n    for (int i = 1; i < nums.length; i++) {\n        curSum = Math.max(nums[i], curSum + nums[i]);\n        maxSum = Math.max(maxSum, curSum);\n    }\n    return maxSum;\n}",
+      python: "def max_sub_array(nums):\n    max_sum = cur_sum = nums[0]\n    for x in nums[1:]:\n        cur_sum = max(x, cur_sum + x)\n        max_sum = max(max_sum, cur_sum)\n    return max_sum",
+      cpp: "int maxSubArray(vector<int>& nums) {\n    int maxSum = nums[0], curSum = nums[0];\n    for (int i = 1; i < (int)nums.size(); i++) {\n        curSum = max(nums[i], curSum + nums[i]);\n        maxSum = max(maxSum, curSum);\n    }\n    return maxSum;\n}"
+    }
+  },
+  {
+    name: "Sliding Window (Variable Size)",
+    tags: ["sliding window","subarray sum","substring","variable window"],
+    explanation: "Handles contiguous subarray/substring problems in O(n) instead of O(n\u00b2). Expand the window with a right pointer; when it breaks a condition, shrink from the left until valid again, updating the best answer as you go \u2014 each element is added and removed at most once.",
+    code: {
+      java: "static int minSubArrayLen(int target, int[] nums) {\n    int left = 0, sum = 0, minLen = Integer.MAX_VALUE;\n    for (int right = 0; right < nums.length; right++) {\n        sum += nums[right];\n        while (sum >= target) {\n            minLen = Math.min(minLen, right - left + 1);\n            sum -= nums[left++];\n        }\n    }\n    return minLen == Integer.MAX_VALUE ? 0 : minLen;\n}",
+      python: "def min_sub_array_len(target, nums):\n    left = total = 0\n    min_len = float('inf')\n    for right, x in enumerate(nums):\n        total += x\n        while total >= target:\n            min_len = min(min_len, right - left + 1)\n            total -= nums[left]\n            left += 1\n    return 0 if min_len == float('inf') else min_len",
+      cpp: "int minSubArrayLen(int target, vector<int>& nums) {\n    int left = 0, sum = 0, minLen = INT_MAX;\n    for (int right = 0; right < (int)nums.size(); right++) {\n        sum += nums[right];\n        while (sum >= target) {\n            minLen = min(minLen, right - left + 1);\n            sum -= nums[left++];\n        }\n    }\n    return minLen == INT_MAX ? 0 : minLen;\n}"
+    }
+  },
+  {
+    name: "Two Pointers (Sorted Array)",
+    tags: ["two pointers","pair sum","sorted array"],
+    explanation: "Uses one pointer from each end of a sorted array, moving inward based on how the current sum compares to the target, to find a pair in O(n) instead of the O(n\u00b2) brute force.",
+    code: {
+      java: "static int[] twoSumSorted(int[] nums, int target) {\n    int left = 0, right = nums.length - 1;\n    while (left < right) {\n        int sum = nums[left] + nums[right];\n        if (sum == target) return new int[]{left, right};\n        else if (sum < target) left++;\n        else right--;\n    }\n    return new int[]{-1, -1};\n}",
+      python: "def two_sum_sorted(nums, target):\n    left, right = 0, len(nums) - 1\n    while left < right:\n        s = nums[left] + nums[right]\n        if s == target:\n            return (left, right)\n        elif s < target:\n            left += 1\n        else:\n            right -= 1\n    return (-1, -1)",
+      cpp: "pair<int,int> twoSumSorted(vector<int>& nums, int target) {\n    int left = 0, right = nums.size() - 1;\n    while (left < right) {\n        int sum = nums[left] + nums[right];\n        if (sum == target) return {left, right};\n        else if (sum < target) left++;\n        else right--;\n    }\n    return {-1, -1};\n}"
+    }
+  },
+  {
+    name: "Binary Search (Lower Bound Template)",
+    tags: ["binary search","lower bound","search template","search on answer"],
+    explanation: "A generic template that finds the leftmost index where a condition first becomes true. Works for exact search, first-true-in-sorted-boolean-array problems, and \"search on the answer\" problems \u2014 just swap out the condition inside the loop.",
+    code: {
+      java: "static int lowerBound(int[] nums, int target) {\n    int lo = 0, hi = nums.length;\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (nums[mid] < target) lo = mid + 1;\n        else hi = mid;\n    }\n    return lo;\n}",
+      python: "def lower_bound(nums, target):\n    lo, hi = 0, len(nums)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid\n    return lo",
+      cpp: "int lowerBound(vector<int>& nums, int target) {\n    int lo = 0, hi = nums.size();\n    while (lo < hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (nums[mid] < target) lo = mid + 1;\n        else hi = mid;\n    }\n    return lo;\n}"
+    }
+  },
+  {
+    name: "BFS (Breadth-First Search)",
+    tags: ["bfs","breadth first search","shortest path unweighted","graph traversal"],
+    explanation: "Explores a graph level by level using a queue, guaranteeing the shortest path in an unweighted graph. Mark nodes visited the moment they're enqueued, not when dequeued, to avoid processing the same node twice.",
+    code: {
+      java: "static List<Integer> bfs(Map<Integer, List<Integer>> graph, int start) {\n    List<Integer> order = new ArrayList<>();\n    Set<Integer> visited = new HashSet<>();\n    Queue<Integer> queue = new LinkedList<>();\n    queue.add(start); visited.add(start);\n    while (!queue.isEmpty()) {\n        int node = queue.poll();\n        order.add(node);\n        for (int next : graph.getOrDefault(node, List.of())) {\n            if (visited.add(next)) queue.add(next);\n        }\n    }\n    return order;\n}",
+      python: "from collections import deque\ndef bfs(graph, start):\n    order = []\n    visited = {start}\n    queue = deque([start])\n    while queue:\n        node = queue.popleft()\n        order.append(node)\n        for nxt in graph.get(node, []):\n            if nxt not in visited:\n                visited.add(nxt)\n                queue.append(nxt)\n    return order",
+      cpp: "vector<int> bfs(unordered_map<int, vector<int>>& graph, int start) {\n    vector<int> order;\n    unordered_set<int> visited{start};\n    queue<int> q; q.push(start);\n    while (!q.empty()) {\n        int node = q.front(); q.pop();\n        order.push_back(node);\n        for (int next : graph[node]) {\n            if (visited.insert(next).second) q.push(next);\n        }\n    }\n    return order;\n}"
+    }
+  },
+  {
+    name: "Union-Find (Disjoint Set)",
+    tags: ["union find","disjoint set","dsu","connectivity"],
+    explanation: "Tracks a partition of elements into disjoint sets, supporting near-O(1) find and union via path compression and union by rank. Used for cycle detection, Kruskal's MST, and connectivity queries.",
+    code: {
+      java: "static int[] parent, rnk;\nstatic int find(int x) {\n    if (parent[x] != x) parent[x] = find(parent[x]);\n    return parent[x];\n}\nstatic void union(int a, int b) {\n    int ra = find(a), rb = find(b);\n    if (ra == rb) return;\n    if (rnk[ra] < rnk[rb]) { int t = ra; ra = rb; rb = t; }\n    parent[rb] = ra;\n    if (rnk[ra] == rnk[rb]) rnk[ra]++;\n}",
+      python: "parent = {}\nrnk = {}\ndef find(x):\n    if parent[x] != x:\n        parent[x] = find(parent[x])\n    return parent[x]\ndef union(a, b):\n    ra, rb = find(a), find(b)\n    if ra == rb:\n        return\n    if rnk[ra] < rnk[rb]:\n        ra, rb = rb, ra\n    parent[rb] = ra\n    if rnk[ra] == rnk[rb]:\n        rnk[ra] += 1",
+      cpp: "vector<int> parent, rnk;\nint find(int x) {\n    return parent[x] == x ? x : parent[x] = find(parent[x]);\n}\nvoid unite(int a, int b) {\n    int ra = find(a), rb = find(b);\n    if (ra == rb) return;\n    if (rnk[ra] < rnk[rb]) swap(ra, rb);\n    parent[rb] = ra;\n    if (rnk[ra] == rnk[rb]) rnk[ra]++;\n}"
+    }
+  },
+  {
+    name: "Dijkstra's Algorithm",
+    tags: ["dijkstra","shortest path","weighted graph","min heap"],
+    explanation: "Finds shortest paths from a source node in a weighted graph with non-negative edges, using a min-heap to always expand the closest unvisited node next \u2014 like BFS, but priority-ordered by distance instead of arrival order.",
+    code: {
+      java: "static int[] dijkstra(Map<Integer, List<int[]>> graph, int src, int n) {\n    int[] dist = new int[n];\n    Arrays.fill(dist, Integer.MAX_VALUE);\n    dist[src] = 0;\n    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[1] - b[1]);\n    pq.add(new int[]{src, 0});\n    while (!pq.isEmpty()) {\n        int[] cur = pq.poll();\n        int node = cur[0], d = cur[1];\n        if (d > dist[node]) continue;\n        for (int[] edge : graph.getOrDefault(node, List.of())) {\n            int next = edge[0], w = edge[1];\n            if (dist[node] + w < dist[next]) {\n                dist[next] = dist[node] + w;\n                pq.add(new int[]{next, dist[next]});\n            }\n        }\n    }\n    return dist;\n}",
+      python: "import heapq\ndef dijkstra(graph, src, n):\n    dist = [float('inf')] * n\n    dist[src] = 0\n    pq = [(0, src)]\n    while pq:\n        d, node = heapq.heappop(pq)\n        if d > dist[node]:\n            continue\n        for next_, w in graph.get(node, []):\n            if d + w < dist[next_]:\n                dist[next_] = d + w\n                heapq.heappush(pq, (dist[next_], next_))\n    return dist",
+      cpp: "vector<int> dijkstra(vector<vector<pair<int,int>>>& graph, int src, int n) {\n    vector<int> dist(n, INT_MAX);\n    dist[src] = 0;\n    priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n    pq.push({0, src});\n    while (!pq.empty()) {\n        auto [d, node] = pq.top(); pq.pop();\n        if (d > dist[node]) continue;\n        for (auto [next, w] : graph[node]) {\n            if (dist[node] + w < dist[next]) {\n                dist[next] = dist[node] + w;\n                pq.push({dist[next], next});\n            }\n        }\n    }\n    return dist;\n}"
+    }
+  },
+  {
+    name: "Sieve of Eratosthenes",
+    tags: ["sieve of eratosthenes","prime numbers","primes"],
+    explanation: "Finds all primes up to n in O(n log log n) by marking multiples of each prime as composite starting from 2, instead of testing each number individually for primality.",
+    code: {
+      java: "static boolean[] sieve(int n) {\n    boolean[] isPrime = new boolean[n + 1];\n    Arrays.fill(isPrime, true);\n    isPrime[0] = isPrime[1] = false;\n    for (int i = 2; (long) i * i <= n; i++) {\n        if (isPrime[i]) {\n            for (int j = i * i; j <= n; j += i) isPrime[j] = false;\n        }\n    }\n    return isPrime;\n}",
+      python: "def sieve(n):\n    is_prime = [True] * (n + 1)\n    is_prime[0] = is_prime[1] = False\n    for i in range(2, int(n**0.5) + 1):\n        if is_prime[i]:\n            for j in range(i*i, n + 1, i):\n                is_prime[j] = False\n    return is_prime",
+      cpp: "vector<bool> sieve(int n) {\n    vector<bool> isPrime(n + 1, true);\n    isPrime[0] = isPrime[1] = false;\n    for (int i = 2; (long long)i * i <= n; i++) {\n        if (isPrime[i]) {\n            for (int j = i * i; j <= n; j += i) isPrime[j] = false;\n        }\n    }\n    return isPrime;\n}"
+    }
+  },
+  {
+    name: "Trie (Prefix Tree)",
+    tags: ["trie","prefix tree","autocomplete","word search"],
+    explanation: "A tree where each path from the root spells a prefix, supporting O(L) insert/search for a string of length L. Used for autocomplete, prefix matching, and word-search style problems.",
+    code: {
+      java: "class TrieNode {\n    Map<Character, TrieNode> children = new HashMap<>();\n    boolean isEnd = false;\n}\nclass Trie {\n    TrieNode root = new TrieNode();\n    void insert(String word) {\n        TrieNode node = root;\n        for (char c : word.toCharArray())\n            node = node.children.computeIfAbsent(c, k -> new TrieNode());\n        node.isEnd = true;\n    }\n    boolean search(String word) {\n        TrieNode node = root;\n        for (char c : word.toCharArray()) {\n            node = node.children.get(c);\n            if (node == null) return false;\n        }\n        return node.isEnd;\n    }\n}",
+      python: "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n    def insert(self, word):\n        node = self.root\n        for c in word:\n            node = node.children.setdefault(c, TrieNode())\n        node.is_end = True\n    def search(self, word):\n        node = self.root\n        for c in word:\n            if c not in node.children:\n                return False\n            node = node.children[c]\n        return node.is_end",
+      cpp: "struct TrieNode {\n    unordered_map<char, TrieNode*> children;\n    bool isEnd = false;\n};\nclass Trie {\npublic:\n    TrieNode* root = new TrieNode();\n    void insert(string word) {\n        TrieNode* node = root;\n        for (char c : word) {\n            if (!node->children.count(c)) node->children[c] = new TrieNode();\n            node = node->children[c];\n        }\n        node->isEnd = true;\n    }\n    bool search(string word) {\n        TrieNode* node = root;\n        for (char c : word) {\n            if (!node->children.count(c)) return false;\n            node = node->children[c];\n        }\n        return node->isEnd;\n    }\n};"
+    }
+  }
+];
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildConceptCard(c){
+  const div = document.createElement('div');
+  div.className = 'concept';
+  div.innerHTML = `
+    <h3>\ud83d\udca1 ${c.name}</h3>
+    <p>${c.explanation}</p>
+    <div class="langTabs">
+      <button data-lang="java" class="active">Java</button>
+      <button data-lang="python">Python</button>
+      <button data-lang="cpp">C++</button>
+    </div>
+    <pre><code data-lang="java">${escapeHtml(c.code.java)}</code></pre>
+    <pre style="display:none"><code data-lang="python">${escapeHtml(c.code.python)}</code></pre>
+    <pre style="display:none"><code data-lang="cpp">${escapeHtml(c.code.cpp)}</code></pre>
+  `;
+  div.querySelectorAll('.langTabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      div.querySelectorAll('.langTabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      div.querySelectorAll('pre').forEach(pre => {
+        pre.style.display = pre.querySelector('code').dataset.lang === btn.dataset.lang ? 'block' : 'none';
+      });
+    });
+  });
+  return div;
+}
+
+const main = document.getElementById('main');
+let solved = {};
+try { solved = JSON.parse(localStorage.getItem('dsa_solved') || '{}'); } catch(e) { solved = {}; }
+
+let excludeSet = new Set();
+try { excludeSet = new Set(JSON.parse(localStorage.getItem('dsa_excluded') || '[]')); } catch(e) { excludeSet = new Set(); }
+
+function norm(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+
+function saveSolved(){
+  try { localStorage.setItem('dsa_solved', JSON.stringify(solved)); } catch(e) {}
+}
+function saveExclude(){
+  try { localStorage.setItem('dsa_excluded', JSON.stringify([...excludeSet])); } catch(e) {}
+}
+
+function shuffleArr(arr){
+  const copy = [...arr];
+  for(let i=copy.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]] = [copy[j],copy[i]];
+  }
+  return copy;
+}
+
+const CONFETTI = ['🎉','✅','🔥','⭐','💪','🎯'];
+function celebrate(count){
+  const overlay = document.getElementById('celebrateOverlay');
+  const msg = document.getElementById('celebrateMsg');
+  msg.textContent = `🎉 ${count} problems solved! You're on a roll.`;
+  overlay.innerHTML = '';
+  overlay.appendChild(msg);
+  overlay.style.display = 'flex';
+  for (let i = 0; i < 22; i++) {
+    const span = document.createElement('span');
+    span.className = 'confetti';
+    span.textContent = CONFETTI[Math.floor(Math.random()*CONFETTI.length)];
+    span.style.left = Math.random()*100 + 'vw';
+    span.style.animationDelay = (Math.random()*0.4) + 's';
+    span.style.fontSize = (1.2 + Math.random()*1.2) + 'rem';
+    overlay.appendChild(span);
+  }
+  setTimeout(() => { overlay.style.display = 'none'; }, 2200);
+}
+
+function render(){
+  const n = parseInt(document.getElementById('perTopic').value, 10);
+  const platform = document.getElementById('platformFilter').value;
+  const difficulty = document.getElementById('difficultyFilter').value;
+  const search = document.getElementById('searchBox').value.trim().toLowerCase();
+  const filtering = search.length > 0 || difficulty !== 'All';
+  main.innerHTML = '';
+  let anyShown = false;
+
+  if (search) {
+    const conceptMatches = CONCEPTS.filter(c =>
+      c.name.toLowerCase().includes(search) || c.tags.some(t => t.includes(search))
+    );
+    conceptMatches.forEach(c => { main.appendChild(buildConceptCard(c)); anyShown = true; });
+  }
+
+  Object.entries(DB).forEach(([topic, problems]) => {
+    let list = problems.filter(([title,,slug]) => !excludeSet.has(norm(slug)) && !excludeSet.has(norm(title)));
+    if (platform !== 'All') list = list.filter(([,,,p='LeetCode']) => p === platform);
+    if (difficulty !== 'All') list = list.filter(([,diff]) => diff === difficulty);
+    if (search) list = list.filter(([title]) => title.toLowerCase().includes(search) || topic.toLowerCase().includes(search));
+    if (!filtering) list = shuffleArr(list).slice(0, n);
+    if (list.length === 0) return;
+    anyShown = true;
+
+    const section = document.createElement('div');
+    section.className = 'topic';
+    const ul = document.createElement('ul');
+    list.forEach(([title, diff, slug, platform='LeetCode']) => {
+      const li = document.createElement('li');
+      const key = topic + '::' + slug;
+      const checked = solved[key] ? 'checked' : '';
+      const url = PLATFORM_URL[platform](slug);
+      li.innerHTML = `
+        <input type="checkbox" ${checked} data-key="${key}">
+        <a href="${url}" target="_blank" rel="noopener">${title}</a>
+        <span class="plat">${platform}</span>
+        <span class="diff ${diff}">${diff}</span>
+      `;
+      ul.appendChild(li);
+    });
+    section.innerHTML = `<h2>${topic} <span class="count">${list.length}${filtering ? ' match' + (list.length===1?'':'es') : ' of ' + problems.length}</span></h2>`;
+    section.appendChild(ul);
+    main.appendChild(section);
+  });
+
+  if (!anyShown) {
+    main.innerHTML = '<div class="noMatch">No problems match that search/filter. Try a broader term.</div>';
+  }
+
+  main.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      solved[cb.dataset.key] = cb.checked;
+      saveSolved();
+      if (cb.checked) {
+        cb.classList.add('pop');
+        setTimeout(() => cb.classList.remove('pop'), 400);
+        const total = Object.values(solved).filter(Boolean).length;
+        if (total > 0 && total % 5 === 0) celebrate(total);
+      }
+    });
+  });
+}
+
+document.getElementById('shuffleBtn').addEventListener('click', render);
+document.getElementById('perTopic').addEventListener('change', render);
+document.getElementById('platformFilter').addEventListener('change', render);
+document.getElementById('difficultyFilter').addEventListener('change', render);
+document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('clearBtn').addEventListener('click', () => {
+  solved = {};
+  saveSolved();
+  render();
+});
+
+function updateImportCount(){
+  document.getElementById('importCount').textContent = excludeSet.size + ' solved problems excluded';
+}
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  const raw = document.getElementById('importBox').value;
+  raw.split(/[,\n]/).map(s => s.trim()).filter(Boolean).forEach(s => excludeSet.add(norm(s)));
+  saveExclude();
+  updateImportCount();
+  document.getElementById('importBox').value = '';
+  render();
+});
+document.getElementById('clearImportBtn').addEventListener('click', () => {
+  excludeSet = new Set();
+  saveExclude();
+  updateImportCount();
+  render();
+});
+
+updateImportCount();
+render();
+</script>
+</body>
+</html>
+
 }
 :root[data-theme="dark"]{
   --bg:#121214; --card:#1c1c1f; --text:#eee; --muted:#999; --border:#2e2e33;
