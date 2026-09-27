@@ -44,6 +44,7 @@ a:hover{color:var(--accent)}
 .diff.Easy{color:var(--easy);background:color-mix(in srgb, var(--easy) 15%, transparent)}
 .diff.Medium{color:var(--medium);background:color-mix(in srgb, var(--medium) 15%, transparent)}
 .diff.Hard{color:var(--hard);background:color-mix(in srgb, var(--hard) 15%, transparent)}
+.plat{font-size:.68rem;color:var(--muted);border:1px solid var(--border);padding:2px 6px;border-radius:6px;white-space:nowrap}
 input[type=checkbox]{width:16px;height:16px;flex-shrink:0}
 footer{max-width:900px;margin:20px auto 0;color:var(--muted);font-size:.78rem;text-align:center}
 </style>
@@ -71,6 +72,13 @@ footer{max-width:900px;margin:20px auto 0;color:var(--muted);font-size:.78rem;te
     <option value="4" selected>4 per topic</option>
     <option value="6">6 per topic</option>
   </select>
+  <select id="platformFilter">
+    <option value="All" selected>All platforms</option>
+    <option value="LeetCode">LeetCode only</option>
+    <option value="Codeforces">Codeforces only</option>
+    <option value="CodeChef">CodeChef only</option>
+    <option value="HackerRank">HackerRank only</option>
+  </select>
 </div>
 <main id="main"></main>
 <footer>Links go to LeetCode. Problem set is curated, not live-pulled — refresh/shuffle re-randomizes which of the curated problems you see.</footer>
@@ -81,7 +89,10 @@ const DB = {
   ["Two Sum","Easy","two-sum"],["Product of Array Except Self","Medium","product-of-array-except-self"],
   ["Group Anagrams","Medium","group-anagrams"],["Longest Substring Without Repeating Characters","Medium","longest-substring-without-repeating-characters"],
   ["Merge Intervals","Medium","merge-intervals"],["Trapping Rain Water","Hard","trapping-rain-water"],
-  ["Best Time to Buy and Sell Stock","Easy","best-time-to-buy-and-sell-stock"]
+  ["Best Time to Buy and Sell Stock","Easy","best-time-to-buy-and-sell-stock"],
+  ["Simple Array Sum","Easy","simple-array-sum","HackerRank"],["Diagonal Difference","Easy","diagonal-difference","HackerRank"],
+  ["Mini-Max Sum","Easy","mini-max-sum","HackerRank"],["Way Too Long Words","Easy","71/A","Codeforces"],
+  ["Team","Easy","231/A","Codeforces"],["ATM","Easy","ATM","CodeChef"]
 ],
 "Two Pointers": [
   ["Container With Most Water","Medium","container-with-most-water"],["3Sum","Medium","3sum"],
@@ -104,7 +115,8 @@ const DB = {
   ["Subsets","Medium","subsets"],["Permutations","Medium","permutations"],
   ["Combination Sum","Medium","combination-sum"],["N-Queens","Hard","n-queens"],
   ["Word Search","Medium","word-search"],["Generate Parentheses","Medium","generate-parentheses"],
-  ["Palindrome Partitioning","Medium","palindrome-partitioning"]
+  ["Palindrome Partitioning","Medium","palindrome-partitioning"],
+  ["Factorial","Easy","FCTRL","CodeChef"]
 ],
 "Trees & BST": [
   ["Maximum Depth of Binary Tree","Easy","maximum-depth-of-binary-tree"],["Validate Binary Search Tree","Medium","validate-binary-search-tree"],
@@ -146,8 +158,16 @@ const DB = {
 "Greedy": [
   ["Jump Game","Medium","jump-game"],["Gas Station","Medium","gas-station"],
   ["Maximum Subarray","Medium","maximum-subarray"],["Partition Labels","Medium","partition-labels"],
-  ["Non-overlapping Intervals","Medium","non-overlapping-intervals"]
+  ["Non-overlapping Intervals","Medium","non-overlapping-intervals"],
+  ["Domino Piling","Easy","50/A","Codeforces"]
 ]
+};
+
+const PLATFORM_URL = {
+  "LeetCode": slug => `https://leetcode.com/problems/${slug}/`,
+  "Codeforces": slug => `https://codeforces.com/problemset/problem/${slug}`,
+  "CodeChef": slug => `https://www.codechef.com/problems/${slug}`,
+  "HackerRank": slug => `https://www.hackerrank.com/challenges/${slug}/problem`
 };
 
 const main = document.getElementById('main');
@@ -167,7 +187,11 @@ function saveExclude(){
 }
 
 function pickRandom(arr, n){
-  const filtered = arr.filter(([title,,slug]) => !excludeSet.has(norm(slug)) && !excludeSet.has(norm(title)));
+  const platformFilter = document.getElementById('platformFilter').value;
+  let filtered = arr.filter(([title,,slug]) => !excludeSet.has(norm(slug)) && !excludeSet.has(norm(title)));
+  if (platformFilter !== 'All') {
+    filtered = filtered.filter(([,,,platform='LeetCode']) => platform === platformFilter);
+  }
   const copy = [...filtered];
   for(let i=copy.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
@@ -184,13 +208,15 @@ function render(){
     const section = document.createElement('div');
     section.className = 'topic';
     const ul = document.createElement('ul');
-    picked.forEach(([title, diff, slug]) => {
+    picked.forEach(([title, diff, slug, platform='LeetCode']) => {
       const li = document.createElement('li');
       const key = topic + '::' + slug;
       const checked = solved[key] ? 'checked' : '';
+      const url = PLATFORM_URL[platform](slug);
       li.innerHTML = `
         <input type="checkbox" ${checked} data-key="${key}">
-        <a href="https://leetcode.com/problems/${slug}/" target="_blank" rel="noopener">${title}</a>
+        <a href="${url}" target="_blank" rel="noopener">${title}</a>
+        <span class="plat">${platform}</span>
         <span class="diff ${diff}">${diff}</span>
       `;
       ul.appendChild(li);
@@ -209,6 +235,7 @@ function render(){
 
 document.getElementById('shuffleBtn').addEventListener('click', render);
 document.getElementById('perTopic').addEventListener('change', render);
+document.getElementById('platformFilter').addEventListener('change', render);
 document.getElementById('clearBtn').addEventListener('click', () => {
   solved = {};
   saveSolved();
