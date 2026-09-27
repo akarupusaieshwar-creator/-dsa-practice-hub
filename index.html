@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DSA Practice Randomizer</title>
+<style>
+:root{
+  --bg:#f7f7f8; --card:#ffffff; --text:#1a1a1a; --muted:#666;
+  --accent:#2563eb; --border:#e2e2e5;
+  --easy:#16a34a; --medium:#d97706; --hard:#dc2626;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121214; --card:#1c1c1f; --text:#eee; --muted:#999; --border:#2e2e33;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121214; --card:#1c1c1f; --text:#eee; --muted:#999; --border:#2e2e33;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:20px 14px 60px}
+header{max-width:900px;margin:0 auto 18px}
+h1{font-size:1.4rem;margin:0 0 4px}
+p.sub{color:var(--muted);margin:0 0 14px;font-size:.92rem}
+.controls{display:flex;gap:8px;flex-wrap:wrap;max-width:900px;margin:0 auto 20px}
+button{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:.9rem;cursor:pointer}
+button.secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
+select{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem}
+main{max-width:900px;margin:0 auto;display:grid;gap:14px}
+.topic{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.topic h2{font-size:1rem;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.count{font-size:.75rem;color:var(--muted);font-weight:normal}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+li{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;overflow-x:auto}
+li:hover{background:var(--bg)}
+a{color:var(--text);text-decoration:none;font-size:.92rem;flex:1}
+a:hover{color:var(--accent)}
+.diff{font-size:.72rem;font-weight:600;padding:2px 7px;border-radius:6px;white-space:nowrap}
+.diff.Easy{color:var(--easy);background:color-mix(in srgb, var(--easy) 15%, transparent)}
+.diff.Medium{color:var(--medium);background:color-mix(in srgb, var(--medium) 15%, transparent)}
+.diff.Hard{color:var(--hard);background:color-mix(in srgb, var(--hard) 15%, transparent)}
+input[type=checkbox]{width:16px;height:16px;flex-shrink:0}
+footer{max-width:900px;margin:20px auto 0;color:var(--muted);font-size:.78rem;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>DSA Practice Randomizer</h1>
+  <p class="sub">A fresh set of problems per topic every time you hit shuffle. Curated LeetCode links — click through to solve.</p>
+</header>
+<div class="topic" style="max-width:900px;margin:0 auto 20px">
+  <h2>Connect your progress</h2>
+  <p class="sub" style="margin:0 0 8px">Paste problem titles or slugs you've already solved (comma or newline separated) — the shuffle will skip these. A live LeetCode/CodeChef login can't run from a browser page, so this is manual for now.</p>
+  <textarea id="importBox" rows="3" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:.85rem" placeholder="e.g. two-sum, valid-parentheses, House Robber"></textarea>
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+    <button id="importBtn">Save solved list</button>
+    <button class="secondary" id="clearImportBtn">Clear solved list</button>
+    <span id="importCount" class="count" style="align-self:center"></span>
+  </div>
+</div>
+<div class="controls">
+  <button id="shuffleBtn">🔀 Shuffle set</button>
+  <button class="secondary" id="clearBtn">Clear checkmarks</button>
+  <select id="perTopic">
+    <option value="3">3 per topic</option>
+    <option value="4" selected>4 per topic</option>
+    <option value="6">6 per topic</option>
+  </select>
+</div>
+<main id="main"></main>
+<footer>Links go to LeetCode. Problem set is curated, not live-pulled — refresh/shuffle re-randomizes which of the curated problems you see.</footer>
+
+<script>
+const DB = {
+"Arrays & Strings": [
+  ["Two Sum","Easy","two-sum"],["Product of Array Except Self","Medium","product-of-array-except-self"],
+  ["Group Anagrams","Medium","group-anagrams"],["Longest Substring Without Repeating Characters","Medium","longest-substring-without-repeating-characters"],
+  ["Merge Intervals","Medium","merge-intervals"],["Trapping Rain Water","Hard","trapping-rain-water"],
+  ["Best Time to Buy and Sell Stock","Easy","best-time-to-buy-and-sell-stock"]
+],
+"Two Pointers": [
+  ["Container With Most Water","Medium","container-with-most-water"],["3Sum","Medium","3sum"],
+  ["Valid Palindrome","Easy","valid-palindrome"],["Sort Colors","Medium","sort-colors"],
+  ["Remove Duplicates from Sorted Array","Easy","remove-duplicates-from-sorted-array"],
+  ["Trapping Rain Water II","Hard","trapping-rain-water-ii"]
+],
+"Sliding Window": [
+  ["Minimum Window Substring","Hard","minimum-window-substring"],["Longest Repeating Character Replacement","Medium","longest-repeating-character-replacement"],
+  ["Sliding Window Maximum","Hard","sliding-window-maximum"],["Permutation in String","Medium","permutation-in-string"],
+  ["Longest Substring with At Most K Distinct Characters","Medium","longest-substring-with-at-most-k-distinct-characters"]
+],
+"Binary Search": [
+  ["Binary Search","Easy","binary-search"],["Search in Rotated Sorted Array","Medium","search-in-rotated-sorted-array"],
+  ["Find Minimum in Rotated Sorted Array","Medium","find-minimum-in-rotated-sorted-array"],
+  ["Median of Two Sorted Arrays","Hard","median-of-two-sorted-arrays"],
+  ["Koko Eating Bananas","Medium","koko-eating-bananas"],["Capacity To Ship Packages Within D Days","Medium","capacity-to-ship-packages-within-d-days"]
+],
+"Recursion & Backtracking": [
+  ["Subsets","Medium","subsets"],["Permutations","Medium","permutations"],
+  ["Combination Sum","Medium","combination-sum"],["N-Queens","Hard","n-queens"],
+  ["Word Search","Medium","word-search"],["Generate Parentheses","Medium","generate-parentheses"],
+  ["Palindrome Partitioning","Medium","palindrome-partitioning"]
+],
+"Trees & BST": [
+  ["Maximum Depth of Binary Tree","Easy","maximum-depth-of-binary-tree"],["Validate Binary Search Tree","Medium","validate-binary-search-tree"],
+  ["Binary Tree Level Order Traversal","Medium","binary-tree-level-order-traversal"],["Lowest Common Ancestor of a BST","Medium","lowest-common-ancestor-of-a-binary-search-tree"],
+  ["Binary Tree Maximum Path Sum","Hard","binary-tree-maximum-path-sum"],["Serialize and Deserialize Binary Tree","Hard","serialize-and-deserialize-binary-tree"],
+  ["Kth Smallest Element in a BST","Medium","kth-smallest-element-in-a-bst"]
+],
+"Graphs (BFS/DFS)": [
+  ["Number of Islands","Medium","number-of-islands"],["Clone Graph","Medium","clone-graph"],
+  ["Course Schedule","Medium","course-schedule"],["Pacific Atlantic Water Flow","Medium","pacific-atlantic-water-flow"],
+  ["Word Ladder","Hard","word-ladder"],["Rotting Oranges","Medium","rotting-oranges"]
+],
+"Stacks & Queues": [
+  ["Valid Parentheses","Easy","valid-parentheses"],["Min Stack","Medium","min-stack"],
+  ["Daily Temperatures","Medium","daily-temperatures"],["Largest Rectangle in Histogram","Hard","largest-rectangle-in-histogram"],
+  ["Evaluate Reverse Polish Notation","Medium","evaluate-reverse-polish-notation"]
+],
+"Linked List": [
+  ["Reverse Linked List","Easy","reverse-linked-list"],["Merge Two Sorted Lists","Easy","merge-two-sorted-lists"],
+  ["Linked List Cycle","Easy","linked-list-cycle"],["Reorder List","Medium","reorder-list"],
+  ["Merge k Sorted Lists","Hard","merge-k-sorted-lists"],["Copy List with Random Pointer","Medium","copy-list-with-random-pointer"]
+],
+"Heaps": [
+  ["Kth Largest Element in an Array","Medium","kth-largest-element-in-an-array"],["Top K Frequent Elements","Medium","top-k-frequent-elements"],
+  ["Find Median from Data Stream","Hard","find-median-from-data-stream"],["Task Scheduler","Medium","task-scheduler"],
+  ["K Closest Points to Origin","Medium","k-closest-points-to-origin"]
+],
+"Dynamic Programming": [
+  ["Climbing Stairs","Easy","climbing-stairs"],["House Robber","Medium","house-robber"],
+  ["Longest Increasing Subsequence","Medium","longest-increasing-subsequence"],["Coin Change","Medium","coin-change"],
+  ["Longest Common Subsequence","Medium","longest-common-subsequence"],["Word Break","Medium","word-break"],
+  ["Edit Distance","Hard","edit-distance"],["Partition Equal Subset Sum","Medium","partition-equal-subset-sum"]
+],
+"Bit Manipulation": [
+  ["Single Number","Easy","single-number"],["Number of 1 Bits","Easy","number-of-1-bits"],
+  ["Counting Bits","Easy","counting-bits"],["Missing Number","Easy","missing-number"],
+  ["Sum of Two Integers","Medium","sum-of-two-integers"]
+],
+"Greedy": [
+  ["Jump Game","Medium","jump-game"],["Gas Station","Medium","gas-station"],
+  ["Maximum Subarray","Medium","maximum-subarray"],["Partition Labels","Medium","partition-labels"],
+  ["Non-overlapping Intervals","Medium","non-overlapping-intervals"]
+]
+};
+
+const main = document.getElementById('main');
+let solved = {};
+try { solved = JSON.parse(localStorage.getItem('dsa_solved') || '{}'); } catch(e) { solved = {}; }
+
+let excludeSet = new Set();
+try { excludeSet = new Set(JSON.parse(localStorage.getItem('dsa_excluded') || '[]')); } catch(e) { excludeSet = new Set(); }
+
+function norm(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+
+function saveSolved(){
+  try { localStorage.setItem('dsa_solved', JSON.stringify(solved)); } catch(e) {}
+}
+function saveExclude(){
+  try { localStorage.setItem('dsa_excluded', JSON.stringify([...excludeSet])); } catch(e) {}
+}
+
+function pickRandom(arr, n){
+  const filtered = arr.filter(([title,,slug]) => !excludeSet.has(norm(slug)) && !excludeSet.has(norm(title)));
+  const copy = [...filtered];
+  for(let i=copy.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]] = [copy[j],copy[i]];
+  }
+  return copy.slice(0, Math.min(n, copy.length));
+}
+
+function render(){
+  const n = parseInt(document.getElementById('perTopic').value, 10);
+  main.innerHTML = '';
+  Object.entries(DB).forEach(([topic, problems]) => {
+    const picked = pickRandom(problems, n);
+    const section = document.createElement('div');
+    section.className = 'topic';
+    const ul = document.createElement('ul');
+    picked.forEach(([title, diff, slug]) => {
+      const li = document.createElement('li');
+      const key = topic + '::' + slug;
+      const checked = solved[key] ? 'checked' : '';
+      li.innerHTML = `
+        <input type="checkbox" ${checked} data-key="${key}">
+        <a href="https://leetcode.com/problems/${slug}/" target="_blank" rel="noopener">${title}</a>
+        <span class="diff ${diff}">${diff}</span>
+      `;
+      ul.appendChild(li);
+    });
+    section.innerHTML = `<h2>${topic} <span class="count">${picked.length} of ${problems.length}</span></h2>`;
+    section.appendChild(ul);
+    main.appendChild(section);
+  });
+  main.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      solved[cb.dataset.key] = cb.checked;
+      saveSolved();
+    });
+  });
+}
+
+document.getElementById('shuffleBtn').addEventListener('click', render);
+document.getElementById('perTopic').addEventListener('change', render);
+document.getElementById('clearBtn').addEventListener('click', () => {
+  solved = {};
+  saveSolved();
+  render();
+});
+
+function updateImportCount(){
+  document.getElementById('importCount').textContent = excludeSet.size + ' solved problems excluded';
+}
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  const raw = document.getElementById('importBox').value;
+  raw.split(/[,\n]/).map(s => s.trim()).filter(Boolean).forEach(s => excludeSet.add(norm(s)));
+  saveExclude();
+  updateImportCount();
+  document.getElementById('importBox').value = '';
+  render();
+});
+document.getElementById('clearImportBtn').addEventListener('click', () => {
+  excludeSet = new Set();
+  saveExclude();
+  updateImportCount();
+  render();
+});
+
+updateImportCount();
+render();
+</script>
+</body>
+</html>
